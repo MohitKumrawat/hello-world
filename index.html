@@ -1,74 +1,77 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Excel Sheets to HTML Table</title>
+<html>
+<head>
+  <title>Substation Parameter Monitoring</title>
+  <script src="xlsx.full.min.js"></script>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
 
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
-      integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA=="
-      crossorigin="anonymous"
-      referrerpolicy="no-referrer"
-    ></script>
-    <!-- This script tag imports the xlsx.full.min.js library which provides functions to read Excel files in JavaScript. -->
+    th, td {
+      border: 2px dotted black;
+      padding: 8px;
+      text-align: left;
+    }
+    body {
+      font-size: xx-large;
+      font-family: monospace;
+      background: #d4d4d4;
+    }
 
-    <style>
-      tr {
-        background-color: gray;
-      }
-      /* This CSS selector sets the background color of every other row to light gray. */
+    tr:nth-child(2n) {
+      background-color: rgba(150, 172, 148, 0.716);
+    }
+  </style>
+  <script>
+    function loadExcelData() {
+      var fileURL = 'https://raw.githubusercontent.com/MohitKumrawat/hello-world/main/excel.xlsx';
+      
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', fileURL, true);
+      xhr.responseType = 'arraybuffer';
 
-      tr:nth-child(2n) {
-        background-color: lightgray;
-      }
+      xhr.onload = function(e) {
+        if (xhr.status == 200) {
+          var data = new Uint8Array(xhr.response);
+          var workbook = XLSX.read(data, {type: 'array'});
+          var worksheet = workbook.Sheets[workbook.SheetNames[0]];
+          var jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+          
+          // Create the table element
+          var table = document.createElement('table');
 
-      tr:nth-child(3n) {
-        background-color: rgb(227, 22, 22);
-      }
-    </style>
-  </head>
+          // Create and populate the table headers
+          var headers = jsonData[0];
+          var headerRow = document.createElement('tr');
+          for (var i = 0; i < headers.length; i++) {
+            var headerCell = document.createElement('th');
+            headerCell.textContent = headers[i];
+            headerRow.appendChild(headerCell);
+          }
+          table.appendChild(headerRow);
 
-  <body>
-    <div class="table"></div>
-    <!-- This empty div will contain the HTML table generated from the Excel file. -->
-	  <p>this is a test para.</p>
-    <script>
-      let table = document.querySelector(".table");
-      // This line selects the empty div with the class "table" and stores it in the table variable.
+          // Populate the table with data rows
+          for (var j = 1; j < jsonData.length; j++) {
+            var dataRow = document.createElement('tr');
+            for (var k = 0; k < headers.length; k++) {
+              var dataCell = document.createElement('td');
+              dataCell.textContent = jsonData[j][k];
+              dataRow.appendChild(dataCell);
+            }
+            table.appendChild(dataRow);
+          }
 
-      (async () => {
-        // This creates an anonymous async function that immediately executes.
+          // Append the table to the document body
+          document.body.appendChild(table);
+        }
+      };
 
-        let workbook = XLSX.read(
-          await (await fetch("/excel.xlsx")).arrayBuffer()
-        );
-        // This line uses the fetch API to download the Excel file named "excel.xlsx" and reads it using the xlsx library.
-        // The result is stored in the workbook variable.
-
-        console.log(workbook);
-        // This logs the workbook object to the console for debugging purposes.
-
-        let worksheet = workbook.SheetNames;
-        // The SheetNames property of the workbook object returns an array of sheet names.
-        // Here, we are storing the sheet names in the worksheet variable.
-
-        worksheet.forEach((name) => {
-          // This is a forEach loop that iterates over each sheet name.
-
-          let html = XLSX.utils.sheet_to_html(workbook.Sheets[name]);
-          // This line converts the sheet data to HTML using the sheet_to_html() method provided by the xlsx library.
-          // The result is stored in the html variable.
-
-          table.innerHTML += `
-	                    <h3>${name}</h3>${html}
-	                    `;
-          // This line appends the sheet name and its HTML representation to the table div using template literals.
-        });
-      })();
-      // This immediately invoked function expression (IIFE) executes the code inside it as soon as it is defined.
-      // Here, it contains an async function that reads the Excel file and generates an HTML table from each sheet.
-    </script>
-  </body>
+      xhr.send();
+    }
+  </script>
+</head>
+<body onload="loadExcelData()">
+</body>
 </html>
